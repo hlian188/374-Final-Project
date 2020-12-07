@@ -1,10 +1,8 @@
 # 374-Final-Project
 Econometrics II Final Project
 
-Test another commit
+Harrison Lian and Lucas Jia
 
-Lucas was here
+AFG: Chlorea Paper
 
-Lucas was here for a second time
-
-use this: https://resources.github.com/whitepapers/github-and-rstudio/
+For RStudio and GIT use this: https://resources.github.com/whitepapers/github-and-rstudio/
