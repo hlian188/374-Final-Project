@@ -21,15 +21,29 @@ df64 <- read_dta("Merged_1853_1864_data.dta")
 ```{r}
 #Clean data
 
-df64$dist_netw <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
+df64$temp <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
 
 df64$dist_netw <- df64$dist_netw/100
 df64$dist_netw2 <- (df64$dist_netw)^2
 df64$dist_netw3 <- (df64$dist_netw)^3
 
+df64$dist_2 <- df64$dist_netw
+df64$dist_2 <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
+
+#	foreach var of local outcomes {
+#	qui: rdbwselect `var' temp, vce(nncluster block)
+#	scalar hopt_`var'=round(e(h_mserd), 0.00001) 
+
+names(df)
+
 df64$dist_netw <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
 
+##NEED TO CALCULATE
+df64$log_rentals_1853 <- 
 
+df64 %>% 
+  filter(broad == 0)%>% 
+  mean(rentals_53, na.rm =T)
 
 ```
 
