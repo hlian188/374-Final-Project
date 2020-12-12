@@ -12,9 +12,12 @@ library(tidyverse)
 library(sandwich)
 library(miceadds)
 library(stargazer)
-setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+library(rdrobust)
+library(rdd)
 
-houses = read_dta("houses_1853_final.dta")
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+
+houses = read_dta("aer_replication/data/19th/houses_1853_final.dta")
 ```
 
 ```{r}
@@ -98,6 +101,42 @@ se_vec_full = se_vec_full[1:19]
 
 ```
 
+
+
+```{r}
+test = houses[complete.cases(houses), ]
+```
+
+```{r}
+
+bw_table1 = c()
+houses$dist_netw <- ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw )
+
+for (i in 1:19) {
+  rdbwselectOBJ = rdbwselect(y = houses[[i]], x = houses$dist_netw)
+  bw_table1 = append(bw_table1, rdbwselectOBJ$bws[1])
+}
+
+table1_bw <- mean(bw_table1)
+```
+
+```{r}
+houses$temp = abs(houses$dist_netw)
+
+m <- rdrobust(y = houses$sewer4, x = houses$dist_netw, h = .297, vce = "hc0", cluster = houses$block)
+summary(m)
+
+rd_est_vec = c()
+rd_se_vec = c()
+
+for (i in 1:19) {
+  m <- rdrobust(y = houses[[i]], x = houses$dist_netw, h = .297, vce = "hc0", cluster = houses$block)
+  rd_est_vec = append(rd_est_vec, m$Estimate[1])
+  rd_se_vec = append(rd_est_vec, m$se[1])
+}
+```
+
+
 ```{r, results = 'asis'}
 getwd()
 test = data.frame(
@@ -106,8 +145,9 @@ test = data.frame(
   SE = se_vec_full,
   Inside1 = in_100_mean,
   Outside1 = out_100_mean,
-  SE1 = se_vec_full
+  SE1 = se_vec_full,
+  RD_Est = rd_est_vec[1:19],
+  RD_SE = rd_se_vec[1:19]
 )
 stargazer(test, summary = FALSE)
 ```
-
