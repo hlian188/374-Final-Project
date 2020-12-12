@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(haven)
 library(tidyverse)
 library(sandwich)
+library(miceadds)
 houses = read_dta("houses_1853_final.dta")
 ```
 
