@@ -150,7 +150,7 @@ test = data.frame(
   SE = se_vec_full,
   Inside1 = in_100_mean,
   Outside1 = out_100_mean,
-  SE1 = se_vec_full,
+  SE1 = se_vec_100,
   RD_Est = rd_est_vec[1:19],
   RD_SE = rd_se_vec[1:19]
 )
