@@ -12,18 +12,17 @@ library(tidyverse)
 library(sandwich)
 library(miceadds)
 library(stargazer)
-<<<<<<< HEAD
 library(rdrobust)
 library(rdd)
 
 #setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 
 houses = read_dta("aer_replication/data/19th/houses_1853_final.dta")
-=======
+
 setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 #setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 houses = read_dta("houses_1853_final.dta")
->>>>>>> 153e50d2b9afa3a6babc6204e4cc205c91c13053
+
 ```
 
 ```{r}
