@@ -13,7 +13,7 @@ library(sandwich)
 library(miceadds)
 library(stargazer)
 setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
-
+#setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 houses = read_dta("houses_1853_final.dta")
 ```
 
