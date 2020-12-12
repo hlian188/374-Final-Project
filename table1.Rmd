@@ -11,31 +11,32 @@ library(haven)
 library(tidyverse)
 library(sandwich)
 library(miceadds)
+library(stargazer)
+setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+
 houses = read_dta("houses_1853_final.dta")
 ```
 
 ```{r}
 #full sample
 houses$taxexon = ifelse(is.na(houses$tax1), 0, 1)
-table1 = houses %>%
-  select(lntax, lnrentals, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
+houses = houses %>%
+  select(lnrentals, lntax, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
          dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
          dist_school, dist_bank, dist_broad, dist_netw, broad, block)
-in_broad_table1 <- table1 %>%
+in_broad_table1 <- houses %>%
   filter(broad == 1)
 
-out_broad_table1 <- table1 %>%
+out_broad_table1 <- houses %>%
   filter(broad == 0)
 
 apply(in_broad_table1, 2, mean, na.rm = T)
-sqrt(diag(vcovHC(fmq, type = "const")))
-sqrt(diag(vcovHC(fmq, type = "HC0")))
 
 ```
 
 ```{r}
 #within 100 meters
-houses100 = table1 %>%
+houses100 = houses %>%
   filter(dist_netw < 1)
 
 houses100_in_broad_table1 <- houses100 %>%
@@ -50,11 +51,63 @@ summary(houses100_in_broad_table1)
 
 ```{r}
 #find the right SE function
-library(plm)
-library(lmtest)
-library(lfe)
-m1 = felm(formula = lntax ~ broad | 0 | 0 | block, data = in_broad_table)
-coeftest(m1,  vcovHC(m1, cluster = "group"))
 
+testlm <- lm.cluster(data = houses, lntax~broad, cluster = "block")
+summary(testlm)
+
+```
+
+```{r}
+#in_broad_df (first column)
+test = houses %>%
+  select(-dist_broad, -dist_netw, -broad, -block)
+
+
+#get the means
+in_all_mean = apply(in_broad_table1, 2, mean, na.rm = T)
+out_all_mean = apply(out_broad_table1, 2, mean, na.rm = T)
+
+in_all_mean = in_all_mean[1:19]
+out_all_mean = out_all_mean[1:19]
+
+in_100_mean = apply(houses100_in_broad_table1, 2, mean, na.rm = T)[1:19]
+out_100_mean = apply(houses100_out_broad_table1, 2, mean, na.rm = T)[1:19]
+
+#get the standard errors
+
+#first we do it on the full sample
+
+se_vec_full = c()
+n = length(names(houses))
+for (i in 1:n) {
+  m = lm.cluster(data = houses, houses[[i]]~broad, cluster = "block")
+  se_vec_full = append(se_vec_full, summary(m)[2,2])
+}
+
+#now we do it on the within 100 m sample
+se_vec_100 = c()
+n = length(names(houses100))
+for (i in 1:n) {
+  m = lm.cluster(data = houses100, houses100[[i]]~broad, cluster = "block")
+  se_vec_100 = append(se_vec_100, summary(m)[2,2])
+}
+
+#the last 4 se's are for variables that don't need to be included in the table
+se_vec_100 = se_vec_100[1:19]
+se_vec_full = se_vec_full[1:19]
+
+```
+
+```{r, results = 'asis'}
+getwd()
+test = data.frame(
+  Inside = in_all_mean,
+  Outside = out_all_mean,
+  SE = se_vec_full,
+  Inside1 = in_100_mean,
+  Outside1 = out_100_mean,
+  SE1 = se_vec_full
+)
+stargazer(test, summary = FALSE)
 ```
 
