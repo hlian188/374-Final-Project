@@ -1,0 +1,59 @@
+---
+title: "table 1 replication"
+author: "Harrison"
+date: "December 9, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(haven)
+library(tidyverse)
+library(sandwich)
+houses = read_dta("houses_1853_final.dta")
+```
+
+```{r}
+#full sample
+houses$taxexon = ifelse(is.na(houses$tax1), 0, 1)
+df = houses %>%
+  select(lntax, lnrentals, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
+         dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
+         dist_school, dist_bank, dist_broad, dist_netw, broad, block)
+in_broad_df <- df %>%
+  filter(broad == 1)
+
+out_broad_df <- df %>%
+  filter(broad == 0)
+
+apply(in_broad_df, 2, mean, na.rm = T)
+sqrt(diag(vcovHC(fmq, type = "const")))
+sqrt(diag(vcovHC(fmq, type = "HC0")))
+
+```
+
+```{r}
+#within 100 meters
+houses100 = df %>%
+  filter(dist_netw < 1)
+
+houses100_in_broad_df <- houses100 %>%
+  filter(broad == 1)
+
+houses100_out_broad_df <- houses100 %>%
+  filter(broad == 0)
+
+summary(houses100_in_broad_df)
+```
+
+
+```{r}
+#find the right SE function
+library(plm)
+library(lmtest)
+library(lfe)
+m1 = felm(formula = lntax ~ broad | 0 | 0 | block, data = in_broad_df)
+coeftest(m1,  vcovHC(m1, cluster = "group"))
+
+```
+
