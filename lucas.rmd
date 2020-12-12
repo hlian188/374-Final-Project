@@ -8,73 +8,33 @@ library(readstata13)
 library(lmtest)
 ```
 
-```{r}
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data")
-dir()
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-dir()
-df <-read.dta13("Merged_1846_1894_data.dta") 
- 
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-dir()
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/current")
-dir()
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/other")
-dir()
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/variance_grid")
-dir()
-
-```
-
-
-
-
+#Table 1
 
 ```{r}
 setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-df <-  read_dta("houses_1853_final.dta")
+#df <-read_dta("houses_1853_final.dta") 
 ```
-
 ```{r}
-#broad is indicator variable denoting if we're in our outside boundary
-in_broad_df <- df %>%
-  filter(broad == 1)
-
-out_broad_df <- df %>%
-  filter(broad == 0)
-
-out_broad_df$dist_
-
-#summary(in_broad_df)
-#summary(out_broad_df)
-
-out_broad_df$taxexon = ifelse(is.na(out_broad_df$tax1), 0,1)
-in_broad_df$taxexon = ifelse(is.na(in_broad_df$tax1), 0,1)
-#summary(in_broad_df)
-
-#sewer access variables are: sewer1 = old/existing, sewer2 = new sewer, sewer3 = no access
-
-```
-
-```{r}
-#full sample
 df$taxexon = ifelse(is.na(df$tax1), 0, 1)
+
 df = df %>%
   select(lntax, lnrentals, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
          dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
          dist_school, dist_bank, dist_broad,dist_netw, broad, block)
+
 in_broad_df <- df %>%
   filter(broad == 1)
 
 out_broad_df <- df %>%
   filter(broad == 0)
 
-#df$dist_netw <- ifelse((df$dist_netw)<0,-df$dist_netw,df$dist_netw )
+df$dist_netw <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+
+df$temp <- abs(df$dist_netw)
 
 ```
 
 ```{r}
-
 houses100 = df %>%
   filter(dist_netw < 1)
 
@@ -84,11 +44,12 @@ houses100_in_broad_df <- houses100 %>%
 houses100_out_broad_df <- houses100 %>%
   filter(broad == 0)
 
-summary(houses100_in_broad_df)
+#summary(houses100_in_broad_df)
 ```
 
 
-```{r}
+```{r Proper-SE-Col1-6}
+#Proper SE
 library(sandwich)
 library(miceadds)
 
@@ -96,16 +57,84 @@ testlm <- lm.cluster(data = df, lntax~broad, cluster = "block")
 summary(testlm)
 ```
 
+```{r Table-1-Col78}
+library(rdrobust)
+
+m <- rdrobust(y = df$dist_bank, x = df$dist_netw, h = .297, vce = "hc0", cluster = df$block)
+summary(m)
+```
+
+
+#Table 3
+
 ```{r}
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/variance_grid")
-var <- read.dta13("grid_houses_final.dta")
+library(tidyverse)
+library(haven)
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+df64 <- read_dta("Merged_1853_1864_data.dta")
+df <- df64
+```
+
+
+```{r Cleaning data}
+df$temp <- df$dist_netw/100
+
+df$temp <- ifelse(df$broad ==0,-df$temp,df$temp )
+
+
+
+
+df$dist_netw <- df$dist_netw/100
+df$dist_netw2 <- (df$dist_netw)^2
+df$dist_netw3 <- (df$dist_netw)^3
+
+df$dist2 <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+
+#calculate optimal bw
+
+df$dist_netw <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+
+#in_broad_df <- df %>%
+#  filter(broad == 1)
+
+#out_broad_df <- df %>%
+#  filter(broad == 0)
+
+df %>% 
+  filter(broad == 0) %>% 
+  summarize(m = mean(log_rentals_1853, na.rm = TRUE))
+
+exp(3.777835	)
 ```
 
 ```{r}
 #Regression Discontuinity 
 library(rddtools)
-house_rdd<-rdd_data(y=house$y,x=house$x,cutpoint=0)
 
 
+
+house_rdd<-rdd_data(y=df$log_rentals_1853,x=df$dist_netw,cutpoint=0)
+
+rddBW <-rdd_bw_ik(rdd_object=house_rdd)
+
+m <- rdd_reg_np(rdd_object = house_rdd, bw = rddBW)
+summary(m)
+plot(rddreg)
 ```
+
+
+```{r}
+library(rdrobust)
+test <- rdbwselect(y = df64$log_rentals_1853, x = df64$temp, c= 0)
+summary(test)
+```
+
+```{r}
+#Main model
+library(rddtools)
+house_rdd<-rdd_data(y=df$lntax,x=df$dist_netw,cutpoint=0)
+lm1 <- rdd_reg_lm(rdd_object = house)
+```
+
+`
 
