@@ -1,0 +1,35 @@
+---
+title: "table 1 replication"
+author: "Harrison"
+date: "December 9, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(haven)
+library(tidyverse)
+library(sandwich)
+library(miceadds)
+library(stargazer)
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+
+df64 <- read_dta("Merged_1853_1864_data.dta")
+```
+
+```{r}
+#Clean data
+
+df64$dist_netw <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
+
+df64$dist_netw <- df64$dist_netw/100
+df64$dist_netw2 <- (df64$dist_netw)^2
+df64$dist_netw3 <- (df64$dist_netw)^3
+
+df64$dist_netw <- ifelse(df64$broad ==0,-df64$dist_netw,df64$dist_netw )
+
+
+
+```
+
