@@ -137,7 +137,7 @@ rd_se_vec = c()
 for (i in 1:19) {
   m <- rdrobust(y = houses[[i]], x = houses$dist_netw, h = .297, vce = "hc0", cluster = houses$block)
   rd_est_vec = append(rd_est_vec, m$Estimate[1])
-  rd_se_vec = append(rd_est_vec, m$se[1])
+  rd_se_vec = append(rd_se_vec, m$se[1])
 }
 ```
 
