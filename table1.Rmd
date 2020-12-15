@@ -16,10 +16,10 @@ library(rdrobust)
 library(rdd)
 
 #Harrison WD
-setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 
 #Lucas WD
-#setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 
 houses = read_dta("houses_1853_final.dta")
 
@@ -65,7 +65,7 @@ summary(testlm)
 
 ```
 
-```{r Replicating table}
+```{r Columns 1-6}
 #in_broad_df (first column)
 test = houses %>%
   select(-dist_broad, -dist_netw, -broad, -block)
@@ -106,13 +106,7 @@ se_vec_full = se_vec_full[1:19]
 
 ```
 
-
-
-```{r}
-test = houses[complete.cases(houses), ]
-```
-
-```{r}
+```{r Columns 7-8}
 
 bw_table1 = c()
 houses$dist_netw <- ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw )
@@ -123,9 +117,7 @@ for (i in 1:19) {
 }
 
 table1_bw <- mean(bw_table1)
-```
 
-```{r}
 houses$temp = abs(houses$dist_netw)
 
 m <- rdrobust(y = houses$sewer4, x = houses$dist_netw, h = .297, vce = "hc0", cluster = houses$block)
@@ -143,18 +135,22 @@ for (i in 1:19) {
 
 
 ```{r Actual Table, results = 'asis'}
-getwd()
+
+names(in_all_mean) <- c("Rental Price (in logs)", "Tax assessed (in logs)", "Tax exonerated (yes = 1)", "Sewer Access: Old/existing",
+"Sewer Access: New sewer", "Sewer Access: No access", "Closest pump Dist.(m/100)", "Soho centroid Dist.(m/100)", "Pres. plague pit Dist.(m/100)", "Public square Dist.(m/100)", "Church Dist.(m/100)", "Police station Dist.(m/100)", "Fire station Dist.(m/100)", "Theater Dist.(m/100)", "Pub Dist.(m/100)", "Urinal Dist.(m/100)", "Sewer vent Dist.(m/100)", "Primary school Dist.(m/100)", "Bank Dist.(m/100)")
+
 test = data.frame(
-  Inside = in_all_mean,
-  Outside = out_all_mean,
+  Full_In = in_all_mean,
+  Out = out_all_mean,
   SE = se_vec_full,
-  Inside1 = in_100_mean,
-  Outside1 = out_100_mean,
-  SE1 = se_vec_100,
+  Within_100m_In = in_100_mean,
+  Out = out_100_mean,
+  SE = se_vec_100,
   RD_Est = rd_est_vec[1:19],
-  RD_SE = rd_se_vec[1:19]
+  SE = rd_se_vec[1:19]
 )
 stargazer(test, summary = FALSE)
+
 ```
 
 
