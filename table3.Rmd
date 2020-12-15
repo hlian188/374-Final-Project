@@ -26,7 +26,7 @@ houses = read_dta("Merged_1853_1864_data.dta")
 ```
 
 ```{r}
-#panel A
+#panel A, column 1
 houses$temp = ifelse(houses$broad == 0, -houses$dist_netw/100, houses$dist_netw/100)
 houses$dist_netw = houses$dist_netw/100
 houses$dist2 = ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw)
@@ -41,12 +41,140 @@ houses = houses %>%
 m = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block)
 summary(m)
 
-#with controls
-controls = c(dist_pump, dist_cent, dist_pit_fake, 
-         dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
-         dist_school, dist_bank, dist_broad, dist_netw)
-m2 = rdrobust( y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block, 
-               covs = c(houses$dist_pump, houses$dist_cent))
+m_coef = m$coef[1]
+
+m_se = m$se[1]
+
+m_bw = m$bws[1]
+
+m_obs <- houses[houses$dist_netw < m_bw,] %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+m_rent_mean <- houses %>%
+  filter(broad == 0 & dist_netw < m_bw) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
+  as.numeric()
+
+m_bw = m_bw*100
+```
+
+```{r}
+#A, column 2
+controls = cbind(houses$dist_cent, houses$dist_square, houses$dist_fire, houses$dist_thea, houses$dist_police,
+                 houses$dist_urinal, houses$dist_pub, houses$dist_church, houses$dist_bank,
+                 houses$no_sewer, houses$old_sewer, houses$dist_vent, houses$dist_pump, houses$dist_pit_fake)
+m2 = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, covs = controls, vce = "nn", cluster = houses$block)
 summary(m2)
+
+m2_coef = m2$coef[1]
+
+m2_se = m2$se[1]
+
+m2_bw = m2$bws[1]
+
+m2_obs <- houses[houses$dist_netw < m2_bw,] %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+m2_rent_mean <- houses %>%
+  filter(broad == 0 & dist_netw < m2_bw) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
+  as.numeric()
+
+m2_bw = m2_bw*100
+
+
+```
+
+```{r}
+#column 3
+m3 = lm.cluster(data = houses[houses$dist_netw < m$bws[1], ], cluster = "block",
+                log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+
+summary(m3)
+
+m3_coef = m3$lm_res$coefficients[2]
+m3_se = summary(m3)[2,2]
+m3_obs = houses[houses$dist_netw < m$bws[1],] %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+m3_rent_mean <- houses %>%
+  filter(broad == 0 & dist_netw < m$bws[1]) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
+  as.numeric()
+
+m3_bw = m_bw
+
+
+
+```
+
+```{r}
+#column 4
+m4 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+                log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+
+summary(m4)
+
+m4_coef = m4$lm_res$coefficients[2]
+m4_se = summary(m4)[2,2]
+m4_obs = houses[houses$dist_netw < 1,] %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+m4_rent_mean <- houses %>%
+  filter(broad == 0 & dist_netw < 1) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
+  as.numeric()
+
+m4_bw = 1*100
+
+```
+
+```{r}
+#column 5
+m5 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+                log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake + as.factor(seg_5))
+
+summary(m5)
+
+
+m5_coef = m5$lm_res$coefficients[2]
+m5_se = summary(m5)[2,2]
+m5_obs = houses[houses$dist_netw < 1,] %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+m5_rent_mean <- houses %>%
+  filter(broad == 0 & dist_netw < 1) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
+  as.numeric()
+
+m5_bw = 100
+```
+
+```{r, Panel B}
+
+
 ```
 
