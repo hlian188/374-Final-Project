@@ -1,6 +1,6 @@
 ---
 title: "table 1 replication"
-author: "Harrison"
+author: "Harrison Lian and Lucas Jia"
 date: "December 9, 2020"
 output: pdf_document
 ---
