@@ -15,17 +15,17 @@ library(stargazer)
 library(rdrobust)
 library(rdd)
 
+#Harrison WD
 #setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 
-houses = read_dta("aer_replication/data/19th/houses_1853_final.dta")
+#Lucas WD
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 
-setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
-#setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 houses = read_dta("houses_1853_final.dta")
 
 ```
 
-```{r}
+```{r Cleaning Data}
 #full sample
 houses$taxexon = ifelse(is.na(houses$tax1), 0, 1)
 houses = houses %>%
@@ -42,7 +42,7 @@ apply(in_broad_table1, 2, mean, na.rm = T)
 
 ```
 
-```{r}
+```{r Split by 100m bandwidth}
 #within 100 meters
 houses100 = houses %>%
   filter(dist_netw < 1)
@@ -57,7 +57,7 @@ summary(houses100_in_broad_table1)
 ```
 
 
-```{r}
+```{r Find correct SE function}
 #find the right SE function
 
 testlm <- lm.cluster(data = houses, lntax~broad, cluster = "block")
@@ -65,7 +65,7 @@ summary(testlm)
 
 ```
 
-```{r}
+```{r Replicating table}
 #in_broad_df (first column)
 test = houses %>%
   select(-dist_broad, -dist_netw, -broad, -block)
@@ -142,7 +142,7 @@ for (i in 1:19) {
 ```
 
 
-```{r, results = 'asis'}
+```{r Actual Table, results = 'asis'}
 getwd()
 test = data.frame(
   Inside = in_all_mean,
