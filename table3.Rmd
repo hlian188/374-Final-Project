@@ -1,0 +1,52 @@
+---
+title: "table3"
+author: "Harrison"
+date: "December 12, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(haven)
+library(tidyverse)
+library(sandwich)
+library(miceadds)
+library(stargazer)
+library(rdrobust)
+library(rdd)
+
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+
+houses = read_dta("aer_replication/data/19th/Merged_1853_1864_data.dta")
+
+setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+#setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+houses = read_dta("Merged_1853_1864_data.dta")
+
+```
+
+```{r}
+#panel A
+houses$temp = ifelse(houses$broad == 0, -houses$dist_netw/100, houses$dist_netw/100)
+houses$dist_netw = houses$dist_netw/100
+houses$dist2 = ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw)
+
+houses$taxexon = ifelse(is.na(houses$tax1), 0, 1)
+houses = houses %>%
+  select(lnrentals, lntax, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
+         dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
+         dist_school, dist_bank, dist_broad, dist_netw, broad, block, temp, dist2, 
+         log_rentals_1853, log_rentals_1864)
+
+m = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block)
+summary(m)
+
+#with controls
+controls = c(dist_pump, dist_cent, dist_pit_fake, 
+         dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
+         dist_school, dist_bank, dist_broad, dist_netw)
+m2 = rdrobust( y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block, 
+               covs = c(houses$dist_pump, houses$dist_cent))
+summary(m2)
+```
+
