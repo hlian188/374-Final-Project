@@ -1,0 +1,145 @@
+---
+title: "table3"
+author: "Harrison"
+date: "December 12, 2020"
+output: pdf_document
+---
+
+```{r Cleaning data}
+df$dist_netw <- df$dist_netw/100
+#df$dist_netw2 <- (df$dist_netw)^2
+#df$dist_netw3 <- (df$dist_netw)^3
+
+df$dist2 <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+
+m64 = rdbwselect(y = df$log_rentals_1864, x = df$dist2, vce = "nn", cluster = df$block)
+```
+
+```{r Column 1}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B21 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, covs = covs2, vce = "nn", cluster = df$block)
+summary(B21)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B21$coef[1,1]
+B21brack = exp(B21$coef[1,1])-1
+B21$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B21$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B21$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B21$bws[1]
+
+```
+
+```{r Column 2}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B22 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, p =3,  h = 0.33, covs = covs2, vce = "nn", cluster = df$block)
+summary(B22)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B22$coef[1,1]
+B22brack = exp(B22$coef[1,1])-1
+B22$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B22$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B22$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B22$bws[1]
+```
+```{r Column 3}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B23 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, p =2,  h = 1, covs = covs2, vce = "nn", cluster = df$block)
+summary(B23)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B23$coef[1,1]
+B23brack = exp(B23$coef[1,1])-1
+B23$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B23$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B23$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B23$bws[1]
+```
+
+```{r Column 4}
+#Need to cluster on block, extract SE, and find # of observations
+
+
+#filter df for houses with 29.2 m
+temp1 <- df %>% 
+  filter(dist_netw < 0.292)
+
+#fitting IV reg
+
+B24 <- ivreg(temp1$log_rentals_1864 ~ temp1$death_ind|temp1$dist_urinal + temp1$old_sewer + temp1$dist_pump) #need to cluster on block SE
+summary(B23)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B24$coefficients[2]
+B24brack = exp(B24$coef[2])-1
+
+#B24$se[1,1] Need to extract se from ivreg
+
+#Number of Obs, Mean outside BSP, BW
+
+df %>% # Num of Obs broken
+  filter(broad == 0 & dist2< 0.292) %>% 
+  nrow() 
+nrow(temp1)
+
+
+df %>% 
+  filter(broad == 0 & dist_netw < 0.292) %>% 
+  summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+29.2
+```
+
+```{r Column 5}
+#Need to cluster on block, extract SE, and find # of observations
+
+
+#filter df for houses with 29.2 m
+temp1 <- df %>% 
+  filter(dist_netw < 0.292)
+
+#fitting IV reg
+
+B25 <- ivreg(temp1$log_rentals_1864 ~ temp1$deaths|temp1$dist_urinal + temp1$old_sewer + temp1$dist_pump) #need to cluster on block SE
+summary(B25)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B25$coefficients[2]
+B25brack = exp(B25$coef[2])-1
+
+#B25$se[1,1] Need to extract se from ivreg
+
+#Number of Obs, Mean outside BSP, BW
+
+df %>% # Num of Obs broken
+  filter(broad == 0 & dist2< 0.292) %>% 
+  nrow() 
+nrow(temp1)
+
+
+df %>% 
+  filter(broad == 0 & dist_netw < 0.292) %>% 
+  summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+29.2
+```
