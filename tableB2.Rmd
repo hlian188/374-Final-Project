@@ -11,7 +11,15 @@ library(haven)
 library(rdrobust)
 library(AER)
 library(ivpack)
+<<<<<<< HEAD
 #setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+=======
+
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+
+>>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
 df64 <- read_dta("Merged_1853_1864_data.dta")
 df <- df64
 ```
@@ -68,6 +76,7 @@ df %>%
   summarise(avg = mean(rentals_64, na.rm = TRUE))
 100*B22$bws[1]
 ```
+
 ```{r Column 3}
 #covariates
 covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
@@ -90,8 +99,6 @@ df %>%
 ```
 
 ```{r Column 4}
-#Need to cluster on block, extract SE, and find # of observations
-
 
 #filter df for houses with 29.2 m
 temp1 <- df %>% 
@@ -99,6 +106,7 @@ temp1 <- df %>%
 
 #fitting IV reg
 
+<<<<<<< HEAD
 #instruments on right, endogenous on left, exogenous on both
 B24 <- ivreg(log_rentals_1864 ~ death_ind  + dist_urinal + old_sewer + dist_pump
              | dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad
@@ -107,60 +115,72 @@ summary(B24)
 
 library(sanwich)
 sqrt(diag(vcovCL(B24, cluster = ~ block)))
+=======
+B24 <- ivreg(log_rentals_1864 ~ death_ind  + dist_urinal + old_sewer + dist_pump| dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad, data = temp1) #need to cluster on block SE
+summary(B24)
+
+>>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
 
 #Coefficients, Transformed exp(beta)-1, SE
 B24$coefficients[2]
 B24brack = exp(B24$coef[2])-1
 
-#B24$se[1,1] Need to extract se from ivreg
+#SE
+se4 <- sqrt(diag(vcovCL(B24, cluster = ~ block)))
+se4[2]
+
 
 #Number of Obs, Mean outside BSP, BW
 
-df %>% # Num of Obs broken
-  filter(broad == 0 & dist2< 0.292) %>% 
-  nrow() 
-nrow(temp1)
-
+B24$n 
 
 df %>% 
   filter(broad == 0 & dist_netw < 0.292) %>% 
   summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+
 29.2
+
+summary(B24, diagnostics =  TRUE)
 ```
 
 ```{r Column 5}
-#Need to cluster on block, extract SE, and find # of observations
-
-
 #filter df for houses with 29.2 m
 temp1 <- df %>% 
   filter(dist_netw < 0.292)
 
 #fitting IV reg
 
+<<<<<<< HEAD
 B25 <- ivreg(log_rentals_1864 ~ deaths  + dist_urinal + old_sewer + dist_pump
              | dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad
              , data = temp1) #need to cluster on block SE #need to cluster on block SE
 summary(B25)
 
 sqrt(diag(vcovCL(B25, cluster = ~ block)))
+=======
+B25 <- ivreg(log_rentals_1864 ~ deaths  + dist_urinal + old_sewer + dist_pump| dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad, data = temp1) #need to cluster on block SE
+summary(B25)
+
+>>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
 
 #Coefficients, Transformed exp(beta)-1, SE
 B25$coefficients[2]
 B25brack = exp(B25$coef[2])-1
 
-#B25$se[1,1] Need to extract se from ivreg
+#SE
+se5 <- sqrt(diag(vcovCL(B25, cluster = ~ block)))
+se5[2]
+
 
 #Number of Obs, Mean outside BSP, BW
 
-df %>% # Num of Obs broken
-  filter(broad == 0 & dist2< 0.292) %>% 
-  nrow() 
-nrow(temp1)
-
+B25$n 
 
 df %>% 
   filter(broad == 0 & dist_netw < 0.292) %>% 
   summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+
 29.2
+
+summary(B25, diagnostics =  TRUE)
 ```

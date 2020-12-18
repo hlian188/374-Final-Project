@@ -31,9 +31,9 @@ houses$temp = ifelse(houses$broad == 0, -houses$dist_netw/100, houses$dist_netw/
 houses$dist_netw = houses$dist_netw/100
 houses$dist2 = ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw)
 
-houses$taxexon = ifelse(is.na(houses$tax1), 0, 1)
+houses$taxexon1853 = ifelse(is.na(houses$tax1_1853), 0, 1)
 houses = houses %>%
-  select(lnrentals, lntax, taxexon, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
+  select(lnrentals, lntax, taxexon1853, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
          dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
          dist_school, dist_bank, dist_broad, dist_netw, broad, block, temp, dist2, 
          log_rentals_1853, log_rentals_1864)
@@ -184,6 +184,33 @@ title(main = "McCrary Test", xlab = "Distance to Closest Point on Boundary (mete
 mc_test$p
 
 #we observe that we have a p value < .05, so that 
+```
+
+```{r}
+#Covariate balance
+test = rdrobust(y = houses$dist_cent, x = houses$dist2, vce = "nn", cluster = houses$block)
+
+
+#we have 14 controls
+controls = cbind(houses$dist_cent, houses$dist_square, houses$dist_fire, houses$dist_thea, houses$dist_police,
+                 houses$dist_urinal, houses$dist_pub, houses$dist_church, houses$dist_bank,
+                 houses$no_sewer, houses$old_sewer, houses$dist_vent, houses$dist_pump, 
+                 houses$dist_pit_fake, houses$taxexon1853)
+par(mfrow = c(3,5))
+rdplot(y = houses$dist_cent, x = houses$dist2, x.lim = c(-1, 1))
+rdplot(y = houses$dist_square, x = houses$dist2, x.lim = c(-1, 1))
+plots = vector(mode = "list", length = 15)
+for (i in 1:15) {
+  p = rdplot(y = controls[,i], x = houses$dist2, x.lim = c(-1, 1))$rdplot
+  plots[[i]] = p
+}
+library(gridExtra)
+library(tidyverse)
+library(ggpubr)
+library(ggplot2)
+ggarrange(plotlist = plots)
+#rdplot(y = houses$dist_cent, x = houses$dist2, x.lim = c(-1,1))
+
 ```
 
 ```{r, Panel B}
