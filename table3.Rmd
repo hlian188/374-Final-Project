@@ -173,8 +173,23 @@ m5_rent_mean <- houses %>%
 m5_bw = 100
 ```
 
+```{r}
+#Density Test, table B2
+library(rdd)
+#our running variable is distance from closest point to BSP boundary, which corresponds to dist2
+mc_test = DCdensity(100*houses$dist2, ext.out = T)
+par(new = T)
+abline(v = 0, lwd = 3, col = "blue")
+title(main = "McCrary Test", xlab = "Distance to Closest Point on Boundary (meters)", ylab = "Density")
+mc_test$p
+
+#we observe that we have a p value < .05, so that 
+```
+
 ```{r, Panel B}
 
 
 ```
+
+
 
