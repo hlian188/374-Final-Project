@@ -11,7 +11,11 @@ library(haven)
 library(rdrobust)
 library(AER)
 library(ivpack)
+<<<<<<< HEAD
 #setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+=======
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+>>>>>>> 317d4c4edba2de8148ec0f560582db9a2de56992
 df64 <- read_dta("Merged_1853_1864_data.dta")
 df <- df64
 ```
@@ -99,8 +103,10 @@ temp1 <- df %>%
 
 #fitting IV reg
 
-B24 <- ivreg(temp1$log_rentals_1864 ~ temp1$death_ind|temp1$dist_urinal + temp1$old_sewer + temp1$dist_pump) #need to cluster on block SE
-summary(B23)
+B24 <- ivreg(log_rentals_1864 ~ death_ind|dist_urinal + old_sewer + dist_pump, data = temp1) #need to cluster on block SE
+summary(B24)
+
+testM <- cluster.robust.se(B24$model, temp1$block)
 
 #Coefficients, Transformed exp(beta)-1, SE
 B24$coefficients[2]
