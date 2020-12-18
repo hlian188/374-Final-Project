@@ -6,6 +6,7 @@ output: pdf_document
 ---
 
 ```{r Cleaning data}
+library(AER)
 df$dist_netw <- df$dist_netw/100
 #df$dist_netw2 <- (df$dist_netw)^2
 #df$dist_netw3 <- (df$dist_netw)^3
