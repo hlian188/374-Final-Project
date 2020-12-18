@@ -8,13 +8,13 @@ library(readstata13)
 library(lmtest)
 ```
 
-#Table 1
+#Table 1:Summary Stats
 
-```{r}
+```{r Setting WD}
 setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-#df <-read_dta("houses_1853_final.dta") 
+df <-read_dta("houses_1853_final.dta") 
 ```
-```{r}
+```{r Cleaning Data}
 df$taxexon = ifelse(is.na(df$tax1), 0, 1)
 
 df = df %>%
@@ -32,9 +32,6 @@ df$dist_netw <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
 
 df$temp <- abs(df$dist_netw)
 
-```
-
-```{r}
 houses100 = df %>%
   filter(dist_netw < 1)
 
@@ -65,11 +62,13 @@ summary(m)
 ```
 
 
-#Table 3
+#Table 3: Main Results
 
-```{r}
+```{r Setting WD}
 library(tidyverse)
 library(haven)
+library(rdrobust)
+library(plm)
 setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 df64 <- read_dta("Merged_1853_1864_data.dta")
 df <- df64
@@ -77,22 +76,15 @@ df <- df64
 
 
 ```{r Cleaning data}
-df$temp <- df$dist_netw/100
-
-df$temp <- ifelse(df$broad ==0,-df$temp,df$temp )
-
-
-
-
 df$dist_netw <- df$dist_netw/100
-df$dist_netw2 <- (df$dist_netw)^2
-df$dist_netw3 <- (df$dist_netw)^3
+#df$dist_netw2 <- (df$dist_netw)^2
+#df$dist_netw3 <- (df$dist_netw)^3
 
 df$dist2 <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
 
-#calculate optimal bw
+m53 = rdbwselect(y = df$log_rentals_1853, x = df$dist2, vce = "nn", cluster = df$block)
 
-df$dist_netw <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+m64 = rdbwselect(y = df$log_rentals_1864, x = df$dist2, vce = "nn", cluster = df$block)
 
 #in_broad_df <- df %>%
 #  filter(broad == 1)
@@ -100,41 +92,265 @@ df$dist_netw <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
 #out_broad_df <- df %>%
 #  filter(broad == 0)
 
-df %>% 
-  filter(broad == 0) %>% 
-  summarize(m = mean(log_rentals_1853, na.rm = TRUE))
+#df %>% 
+#  filter(broad == 0) %>% 
+#  summarize(m = mean(log_rentals_1853, na.rm = TRUE))
 
-exp(3.777835	)
+#exp(3.777835	)
 ```
 
-```{r}
-#Regression Discontuinity 
-library(rddtools)
+```{r Baseline model}
+#df$dist_netw <- df$dist_netw/100
+#df$dist2 <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+mA1 <- rdrobust(df$log_rentals_1853, x = df$dist2, vce = "nn", cluster = df$block)
+summary(mA1)
+mB1 <- rdrobust(df$log_rentals_1864, x = df$dist2, vce = "nn", cluster = df$block)
+summary(mB1)
+```
+
+```{r Baseline model with controls}
+covs1 <- cbind(df$dist_cent, df$dist_square, df$dist_fire, 
+               df$dist_thea, df$dist_police, df$dist_urinal, 
+               df$dist_pub, df$dist_church, df$dist_bank, 
+               df$no_sewer, df$old_sewer, df$dist_vent, 
+               df$dist_pump, df$dist_pit_fake)
+
+mA2 <- rdrobust(df$log_rentals_1853, x = df$dist2, covs = covs1, vce = "nn", cluster = df$block)
+summary(mA2)
+mB2 <- rdrobust(df$log_rentals_1864, x = df$dist2, covs = covs1, vce = "nn", cluster = df$block)
+summary(mB2)
+```
+
+```{r Semi poly and bandwidth}
+library(sandwich)
+library(miceadds)
+
+mA3 <- lm.cluster(df[df$dist_netw < m53$bws[1],], log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake, cluster = "block")
+summary(mA3)
+
+mA4 <- lm.cluster(df[df$dist_netw < 1,], log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake, cluster = "block")
+summary(mA4)
+
+mA5 <- lm.cluster(df[df$dist_netw < 1,], log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake + factor(seg_5), cluster = "block")
+summary(mA5)
+
+mB3 <- lm.cluster(df[df$dist_netw < m64$bws[1],], log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake, cluster = "block")
+summary(mB3)
 
 
+mB4 <- lm.cluster(df[df$dist_netw < 1,], log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake, cluster = "block")
+summary(mB4)
 
-house_rdd<-rdd_data(y=df$log_rentals_1853,x=df$dist_netw,cutpoint=0)
+mB5 <- lm.cluster(df[df$dist_netw < 1,], log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + dist_fire + dist_thea + dist_police + dist_urinal + dist_pub +dist_church + dist_bank + no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake + factor(seg_5), cluster = "block")
+summary(mB5)
 
-rddBW <-rdd_bw_ik(rdd_object=house_rdd)
-
-m <- rdd_reg_np(rdd_object = house_rdd, bw = rddBW)
-summary(m)
-plot(rddreg)
 ```
 
 
-```{r}
+```{r Additional Things for Col 1/2}
+library(tidyverse)
+
+#Bandwidth
+mA1$N_h
+
+#Mean Outside BSP
+df %>%
+  filter(broad == 0 & dist_netw < mA2$bws[1]) %>%
+  summarise(avg = mean(rentals_53, na.rm = TRUE))
+
+#Bandwidth
+100*mA1$bws[1]
+
+#Does not work for columns 3,4,5
+
+```
+
+
+```{r Columns 3-5 Observations}
+
+
+df %>%
+  filter(broad == 0 & dist_netw <1) %>%
+  drop_na() %>% 
+  nrow()
+
+
+test = df[df$dist_netw < m$bws[1],]
+
+test %>%
+  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+```
+#Table B2: Fuzzy RD
+
+```{r Setting WD}
+library(tidyverse)
+library(haven)
 library(rdrobust)
-test <- rdbwselect(y = df64$log_rentals_1853, x = df64$temp, c= 0)
-summary(test)
+library(AER)
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+df64 <- read_dta("Merged_1853_1864_data.dta")
+df <- df64
 ```
+
+
+```{r Cleaning data}
+df$dist_netw <- df$dist_netw/100
+#df$dist_netw2 <- (df$dist_netw)^2
+#df$dist_netw3 <- (df$dist_netw)^3
+
+df$dist2 <- ifelse(df$broad ==0,-df$dist_netw,df$dist_netw )
+
+m64 = rdbwselect(y = df$log_rentals_1864, x = df$dist2, vce = "nn", cluster = df$block)
+```
+
+```{r Column 1}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B21 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, covs = covs2, vce = "nn", cluster = df$block)
+summary(B21)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B21$coef[1,1]
+B21brack = exp(B21$coef[1,1])-1
+B21$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B21$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B21$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B21$bws[1]
+
+```
+
+```{r Column 2}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B22 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, p =3,  h = 0.33, covs = covs2, vce = "nn", cluster = df$block)
+summary(B22)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B22$coef[1,1]
+B22brack = exp(B22$coef[1,1])-1
+B22$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B22$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B22$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B22$bws[1]
+```
+```{r Column 3}
+#covariates
+covs2 <- cbind(df$dist_cent, df$dist_urinal,df$old_sewer, df$dist_pump)
+
+#fitting fuzzy LLR
+B23 <- rdrobust(df$log_rentals_1864, x = df$dist2,fuzzy = df$death_ind, p =2,  h = 1, covs = covs2, vce = "nn", cluster = df$block)
+summary(B23)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B23$coef[1,1]
+B23brack = exp(B23$coef[1,1])-1
+B23$se[1,1]
+
+#Number of Obs, Mean outside BSP, BW
+B23$N_h
+df %>%
+  filter(broad == 0 & dist_netw < B23$bws[1]) %>%
+  summarise(avg = mean(rentals_64, na.rm = TRUE))
+100*B23$bws[1]
+```
+
+```{r Column 4}
+library(lmtest)
+library(sandwich)
+#Need to cluster on block
+
+df$
+
+#filter df for houses with 29.2 m
+temp1 <- df %>% 
+  filter(dist_netw < 0.292)
+
+#fitting IV reg
+#instruments on right, endogenous on left, exogenous on both
+firstStage = lm(broad~ death_ind + dist_urinal + old_sewer + dist_pump, data = temp1)
+summary(firstStage)
+
+B24 <- ivreg(log_rentals_1864 ~ death_ind  + dist_urinal + old_sewer + dist_pump
+             | dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad
+             , data = temp1) #need to cluster on block SE
+summary(B24)
+
+se <- sqrt(diag(vcovCL(B24, cluster = ~ block)))
+se
+           
+#Coefficients, Transformed exp(beta)-1, SE
+B24$coefficients[2]
+B24brack = exp(B24$coef[2])-1
+
+#B24$se[1,1] Need to extract se from ivreg, can hard code
+
+#Number of Obs, Mean outside BSP, BW
+
+B24$n
+
+df %>% 
+  filter(broad == 0 & dist_netw < 0.292) %>% 
+  summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+29.2
+```
+
+```{r Column 5}
+#Need to cluster on block
+
+#filter df for houses with 29.2 m
+temp1 <- df %>% 
+  filter(dist_netw < 0.292)
+
+#fitting IV reg
+
+B25 <- ivreg(log_rentals_1864 ~ deaths  + dist_urinal + old_sewer + dist_pump| dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad, data = temp1) #need to cluster on block SE
+summary(B25)
+
+#Coefficients, Transformed exp(beta)-1, SE
+B25$coefficients[2]
+B25brack = exp(B25$coef[2])-1
+
+se2 <- sqrt(diag(vcovCL(B25, cluster = ~ block)))
+se2#Number of Obs, Mean outside BSP, BW
+
+B25$n
+
+df %>% 
+  filter(broad == 0 & dist_netw < 0.292) %>% 
+  summarize(mean1 = mean(rentals_64, na.rm = TRUE))
+29.2
+```
+
+# Sargan Hansen Test
 
 ```{r}
-#Main model
-library(rddtools)
-house_rdd<-rdd_data(y=df$lntax,x=df$dist_netw,cutpoint=0)
-lm1 <- rdd_reg_lm(rdd_object = house)
+summary(B24, diagnostics =  TRUE)
+summary(B25, diagnostics =  TRUE)
 ```
 
-`
 
+# Covariate Balance
+
+```{r}
+
+```
+
+
+# Figure B3: False Boundaries
