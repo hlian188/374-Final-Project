@@ -10,13 +10,13 @@ library(tidyverse)
 library(haven)
 library(rdrobust)
 library(AER)
-setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
+library(ivpack)
+#setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 df64 <- read_dta("Merged_1853_1864_data.dta")
 df <- df64
 ```
 
 ```{r Cleaning data}
-library(AER)
 df$dist_netw <- df$dist_netw/100
 #df$dist_netw2 <- (df$dist_netw)^2
 #df$dist_netw3 <- (df$dist_netw)^3
