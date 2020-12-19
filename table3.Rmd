@@ -3,6 +3,7 @@ title: "table3"
 author: "Harrison"
 date: "December 12, 2020"
 output: pdf_document
+fig_caption: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -124,7 +125,7 @@ mA5_obs = length(mA5$lm_res$residuals)
 
 ```
 
-```{r}
+```{r, fig.cap = "Table B2"}
 #Density Test, table B2
 library(rdd)
 #our running variable is distance from closest point to BSP boundary, which corresponds to dist2
@@ -162,10 +163,14 @@ for (i in 1:14) {
 }
 ```
 
-```{r, fig.height = 10}
+```{r, fig.height = 10, fig.cap = "Figure B1"}
 #show plot
 ggarrange(plotlist = plots, nrow = 5, ncol = 2)
-
+p_values
+bad_i = which(p_values < .05)
+names[bad_i]
+p_values[bad_i]
+#dist_urinal is the only covariate that fails covariate balance
 
 ```
 
@@ -373,7 +378,7 @@ mD5_obs = length(mD5$lm_res$residuals)
 
 ```
 
-```{r, results = 'asis'}
+```{r, results = 'asis', fig.cap = "Table 3"}
 #Make the table
 
 
@@ -395,10 +400,10 @@ llr_cntrls = c(mA2_coef, mA2_se, mA2_obs, mA2_mean, mA2_bw,
                mC2_coef, mC2_se, mC2_obs, mC2_mean, mC2_bw,
                mD2_coef, mD2_se, mD2_obs, mD2_mean, mD2_bw)
 
-poly_rd_opt = c(mA3_coef, mA3_se, mA3_obs, mean_rentals53, 100,
-                mB3_coef, mB3_se, mB3_obs, mean_rentals64, 100,
-                mC3_coef, mC3_se, mC3_obs, mean_rentals94, 100,
-                mD3_coef, mD3_se, mD3_obs, mean_rentals36, 100)
+poly_rd_opt = c(mA3_coef, mA3_se, mA3_obs, mean_rentals53, mA1_bw,
+                mB3_coef, mB3_se, mB3_obs, mean_rentals64, mB1_bw,
+                mC3_coef, mC3_se, mC3_obs, mean_rentals94, mC1_bw,
+                mD3_coef, mD3_se, mD3_obs, mean_rentals36, mD1_bw)
 
 poly_rd_wide = c(mA4_coef, mA4_se, mA4_obs, mean_rentals53_all, 100,
                  mB4_coef, mB4_se, mB4_obs, mean_rentals64_all, 100,
@@ -414,10 +419,31 @@ poly_rd_segfe = c(mA5_coef, mA5_se, mA5_obs, mean_rentals53_all, 100,
 test = data.frame(
   LLR_Baseline = llr_base,
   LLR_Controls = llr_cntrls,
-  `Polynomial RD Optimal Band` = poly_rd_opt,
-  `Polynomial RD Wide Band` = poly_rd_wide,
-  `Polynomial RD Segment FE` = poly_rd_segfe
+  `Poly RD Optimal Band` = poly_rd_opt,
+  `Poly RD Wide Band` = poly_rd_wide,
+  `Poly RD Segment FE` = poly_rd_segfe
 )
-stargazer(test, summary = FALSE)
+
+rownames(test) = c("Panel A. log rental prices, 1853
+                    Inside BSP", "se", "Observations1", "Mean Outside BSP1", "Bandwidth (meters)1",
+                    "Panel B. log rental prices, 1864 
+                    Inside BSP", "se2", "Observations2", "Mean Outside BSP2", "Bandwidth (meters)2",
+                    "Panel C. log rental prices, 1894
+                    Inside BSP", "se3", "Observations3", "Mean Outside BSP3", "Bandwidth (meters)3",
+                    "Panel A. log rental prices, 1936
+                    Inside BSP", "se4", "Observations4", "Mean Outside BSP4", "Bandwidth (meters)4")
+# col_names = c("LLRBaseline", "LLRControls", "Poly RDOptimal Band", "PolyRDWide Band", 
+#               "Poly RDSegment FE")
+stargazer(test, summary = FALSE, font.size = "scriptsize", column.sep.width = "1pt")
+```
+
+```{r, fig.cap = "Residual Plots"}
+#check residuals for any unobserved heterogeneity
+plot(mA3$lm_res) #residuals seem to have mean 0, but are not normally distributed
+plot(mB3$lm_res) #residuals mean 0, not normal
+plot(mC3$lm_res)
+plot(mD3$lm_res)
+
+#all residuals seem to have mean 0, but not normal
 ```
 
