@@ -11,15 +11,12 @@ library(haven)
 library(rdrobust)
 library(AER)
 library(ivpack)
-<<<<<<< HEAD
 #setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-=======
 
 #setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 
 setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
 
->>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
 df64 <- read_dta("Merged_1853_1864_data.dta")
 df <- df64
 ```
@@ -106,21 +103,16 @@ temp1 <- df %>%
 
 #fitting IV reg
 
-<<<<<<< HEAD
 #instruments on right, endogenous on left, exogenous on both
 B24 <- ivreg(log_rentals_1864 ~ death_ind  + dist_urinal + old_sewer + dist_pump
              | dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad
              , data = temp1) #need to cluster on block SE
 summary(B24)
 
-library(sanwich)
+library(sandwich)
 sqrt(diag(vcovCL(B24, cluster = ~ block)))
-=======
 B24 <- ivreg(log_rentals_1864 ~ death_ind  + dist_urinal + old_sewer + dist_pump| dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad, data = temp1) #need to cluster on block SE
 summary(B24)
-
->>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
-
 #Coefficients, Transformed exp(beta)-1, SE
 B24$coefficients[2]
 B24brack = exp(B24$coef[2])-1
@@ -150,18 +142,15 @@ temp1 <- df %>%
 
 #fitting IV reg
 
-<<<<<<< HEAD
 B25 <- ivreg(log_rentals_1864 ~ deaths  + dist_urinal + old_sewer + dist_pump
              | dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad
              , data = temp1) #need to cluster on block SE #need to cluster on block SE
 summary(B25)
 
 sqrt(diag(vcovCL(B25, cluster = ~ block)))
-=======
+
 B25 <- ivreg(log_rentals_1864 ~ deaths  + dist_urinal + old_sewer + dist_pump| dist_urinal + old_sewer + dist_pump + broad + dist_broad + broad*dist_broad, data = temp1) #need to cluster on block SE
 summary(B25)
-
->>>>>>> 91dd2e27685289a6519ce675bf6027cd11826992
 
 #Coefficients, Transformed exp(beta)-1, SE
 B25$coefficients[2]
@@ -182,5 +171,12 @@ df %>%
 
 29.2
 
+summary(B25, diagnostics =  TRUE)
+```
+
+# Sargan Hansen Test
+
+```{r}
+summary(B24, diagnostics =  TRUE)
 summary(B25, diagnostics =  TRUE)
 ```
