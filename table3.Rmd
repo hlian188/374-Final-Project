@@ -15,13 +15,16 @@ library(stargazer)
 library(rdrobust)
 library(rdd)
 
+library(ggpubr)
+library(ggplot2)
+
 #setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 
-houses = read_dta("aer_replication/data/19th/Merged_1853_1864_data.dta")
+#houses = read_dta("aer_replication/data/19th/Merged_1853_1864_data.dta")
 
-setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
+#setwd("~/Econometrics 2/374-Final-Project/aer_replication/data/19th")
 #setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/19th")
-houses = read_dta("Merged_1853_1864_data.dta")
+houses = read_dta("aer_replication/data/19th/Merged_1853_1864_data.dta")
 
 ```
 
@@ -29,37 +32,28 @@ houses = read_dta("Merged_1853_1864_data.dta")
 #panel A, column 1
 houses$temp = ifelse(houses$broad == 0, -houses$dist_netw/100, houses$dist_netw/100)
 houses$dist_netw = houses$dist_netw/100
+houses$dist_netw2 = houses$dist_netw^2
+houses$dist_netw3 = houses$dist_netw^3
 houses$dist2 = ifelse(houses$broad == 0, -houses$dist_netw, houses$dist_netw)
 
-houses$taxexon1853 = ifelse(is.na(houses$tax1_1853), 0, 1)
-houses = houses %>%
-  select(lnrentals, lntax, taxexon1853, sewer1, sewer2, sewer4, dist_pump, dist_cent, dist_pit_fake, 
-         dist_square, dist_church, dist_police, dist_fire, dist_thea, dist_pub, dist_urinal, dist_vent, 
-         dist_school, dist_bank, dist_broad, dist_netw, broad, block, temp, dist2, 
-         log_rentals_1853, log_rentals_1864)
+#calculate optimal bandwidth
+bw_1853 = rdbwselect(houses$log_rentals_1853, x = houses$temp, vce = "nn", cluster = houses$block)$bws[1]
+bw_1864 = rdbwselect(houses$log_rentals_1864, x = houses$temp, vce = "nn", cluster = houses$block)$bws[1]
 
-m = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block)
-summary(m)
+mean_rentals53 = mean(houses[houses$broad == 0 & houses$dist_netw < bw_1853, ]$rentals_53, na.rm = T)
+mean_rentals64 = mean(houses[houses$broad == 0 & houses$dist_netw < bw_1864, ]$rentals_64, na.rm = T)
 
-m_coef = m$coef[1]
+mean_rentals53_all = mean(houses[houses$broad == 0 & houses$dist_netw < 1, ]$rentals_53, na.rm = T)
+mean_rentals64_all = mean(houses[houses$broad == 0 & houses$dist_netw < 1, ]$rentals_64, na.rm = T)
 
-m_se = m$se[1]
 
-m_bw = m$bws[1]
+mA1 = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, vce = "nn", cluster = houses$block)
+summary(mA1)
 
-m_obs <- houses[houses$dist_netw < m_bw,] %>%
-  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
-                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
-                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
-  drop_na() %>%
-  nrow()
-
-m_rent_mean <- houses %>%
-  filter(broad == 0 & dist_netw < m_bw) %>%
-  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
-  as.numeric()
-
-m_bw = m_bw*100
+mA1_coef = mA1$coef[1]
+mA1_se = mA1$se[1]
+mA1_bw = mA1$bws[1]
+mA1_obs = sum(mA1$N_h)
 ```
 
 ```{r}
@@ -67,110 +61,67 @@ m_bw = m_bw*100
 controls = cbind(houses$dist_cent, houses$dist_square, houses$dist_fire, houses$dist_thea, houses$dist_police,
                  houses$dist_urinal, houses$dist_pub, houses$dist_church, houses$dist_bank,
                  houses$no_sewer, houses$old_sewer, houses$dist_vent, houses$dist_pump, houses$dist_pit_fake)
-m2 = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, covs = controls, vce = "nn", cluster = houses$block)
-summary(m2)
+mA2 = rdrobust(y = houses$log_rentals_1853, x = houses$dist2, covs = controls, 
+              vce = "nn", cluster = houses$block)
+summary(mA2)
 
-m2_coef = m2$coef[1]
-
-m2_se = m2$se[1]
-
-m2_bw = m2$bws[1]
-
-m2_obs <- houses[houses$dist_netw < m2_bw,] %>%
-  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
-                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
-                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
-  drop_na() %>%
-  nrow()
-
-m2_rent_mean <- houses %>%
-  filter(broad == 0 & dist_netw < m2_bw) %>%
-  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
-  as.numeric()
-
-m2_bw = m2_bw*100
-
-
+mA2_coef = mA2$coef[1]
+mA2_se = mA2$se[1]
+mA2_bw = mA2$bws[1]
+mA2_obs = sum(mA2$N_h)
+mA2_mean = mean(houses[houses$broad == 0 & houses$dist_netw < mA2_bw, ]$rentals_53, na.rm = T)
 ```
 
 ```{r}
 #column 3
-m3 = lm.cluster(data = houses[houses$dist_netw < m$bws[1], ], cluster = "block",
+mA3 = lm.cluster(data = houses[houses$dist_netw < bw_1853, ], cluster = "block",
                 log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
                   dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
                   no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
 
-summary(m3)
+summary(mA3)
 
-m3_coef = m3$lm_res$coefficients[2]
-m3_se = summary(m3)[2,2]
-m3_obs = houses[houses$dist_netw < m$bws[1],] %>%
-  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
-                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
-                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
-  drop_na() %>%
-  nrow()
-m3_rent_mean <- houses %>%
-  filter(broad == 0 & dist_netw < m$bws[1]) %>%
-  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
-  as.numeric()
-
-m3_bw = m_bw
-
-
+mA3_coef = mA3$lm_res$coefficients[2]
+mA3_se = summary(mA3)[2,2]
+mA3_obs = length(mA3$lm_res$residuals)
+# m3_obs = houses[houses$dist_netw < m$bws[1],] %>%
+#   select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
+#                   dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
+#                   no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+#   drop_na() %>%
+#   nrow()
 
 ```
 
 ```{r}
 #column 4
-m4 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+mA4 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
                 log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
                   dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
                   no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
 
-summary(m4)
+summary(mA4)
 
-m4_coef = m4$lm_res$coefficients[2]
-m4_se = summary(m4)[2,2]
-m4_obs = houses[houses$dist_netw < 1,] %>%
-  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
-                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
-                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
-  drop_na() %>%
-  nrow()
-m4_rent_mean <- houses %>%
-  filter(broad == 0 & dist_netw < 1) %>%
-  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
-  as.numeric()
-
-m4_bw = 1*100
+mA4_coef = mA4$lm_res$coefficients[2]
+mA4_se = summary(mA4)[2,2]
+mA4_obs = length(mA4$lm_res$residuals)
 
 ```
 
 ```{r}
 #column 5
-m5 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+mA5 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
                 log_rentals_1853 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
                   dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
                   no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake + as.factor(seg_5))
 
-summary(m5)
+summary(mA5)
 
 
-m5_coef = m5$lm_res$coefficients[2]
-m5_se = summary(m5)[2,2]
-m5_obs = houses[houses$dist_netw < 1,] %>%
-  select(log_rentals_1853, broad, dist_netw, dist_netw2, dist_cent, dist_square,
-                  dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,
-                  no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
-  drop_na() %>%
-  nrow()
-m5_rent_mean <- houses %>%
-  filter(broad == 0 & dist_netw < 1) %>%
-  summarise(avg = mean(rentals_53, na.rm = TRUE)) %>%
-  as.numeric()
+mA5_coef = mA5$lm_res$coefficients[2]
+mA5_se = summary(mA5)[2,2]
+mA5_obs = length(mA5$lm_res$residuals)
 
-m5_bw = 100
 ```
 
 ```{r}
@@ -178,45 +129,295 @@ m5_bw = 100
 library(rdd)
 #our running variable is distance from closest point to BSP boundary, which corresponds to dist2
 mc_test = DCdensity(100*houses$dist2, ext.out = T)
-par(new = T)
 abline(v = 0, lwd = 3, col = "blue")
 title(main = "McCrary Test", xlab = "Distance to Closest Point on Boundary (meters)", ylab = "Density")
 mc_test$p
-
-#we observe that we have a p value < .05, so that 
 ```
 
-```{r}
-#Covariate balance
-test = rdrobust(y = houses$dist_cent, x = houses$dist2, vce = "nn", cluster = houses$block)
+
+```{r, fig.show = 'hide'}
+#Covariate balance (figure B1)
 
 
 #we have 14 controls
 controls = cbind(houses$dist_cent, houses$dist_square, houses$dist_fire, houses$dist_thea, houses$dist_police,
                  houses$dist_urinal, houses$dist_pub, houses$dist_church, houses$dist_bank,
                  houses$no_sewer, houses$old_sewer, houses$dist_vent, houses$dist_pump, 
-                 houses$dist_pit_fake, houses$taxexon1853)
-par(mfrow = c(3,5))
-rdplot(y = houses$dist_cent, x = houses$dist2, x.lim = c(-1, 1))
-rdplot(y = houses$dist_square, x = houses$dist2, x.lim = c(-1, 1))
+                 houses$dist_pit_fake)
+names = c("dist_cent", "dist_squre", "dist_fire", "dist_theater", "dist_police",
+          "dist_urinal", "dist_pub", "dist_church", "dist_bank", "no_sewer", "old_sewer", "dist_vent",
+          "dist_pump", "dist_pit_fake", "dist_taxexon")
+
 plots = vector(mode = "list", length = 15)
-for (i in 1:15) {
-  p = rdplot(y = controls[,i], x = houses$dist2, x.lim = c(-1, 1))$rdplot
+
+p_values = c()
+for (i in 1:14) {
+  p = rdplot(y = controls[,i], x = houses$dist2, x.lim = c(-1, 1), title = names[i], x.label = "Distance ot Boundary (meters/100)")$rdplot
   plots[[i]] = p
+  
+  model = rdrobust(y = controls[,i], x = houses$dist2, vce = "nn", cluster = houses$block)
+  #using the p value using robust clustered standard errors
+  p = model$pv[3]
+  p_values = append(p_values, p)
 }
-library(gridExtra)
-library(tidyverse)
-library(ggpubr)
-library(ggplot2)
-ggarrange(plotlist = plots)
-#rdplot(y = houses$dist_cent, x = houses$dist2, x.lim = c(-1,1))
+```
+
+```{r, fig.height = 10}
+#show plot
+ggarrange(plotlist = plots, nrow = 5, ncol = 2)
+
 
 ```
 
 ```{r, Panel B}
+#column 1
+mB1 = rdrobust(y = houses$log_rentals_1864, x = houses$dist2, vce = "nn", cluster = houses$block)
+summary(mB1)
+
+mB1_coef = mB1$coef[1]
+mB1_se = mB1$se[1]
+mB1_bw = mB1$bws[1]
+mB1_obs = sum(mB1$N_h)
+
+#column 2
+controls = cbind(houses$dist_cent, houses$dist_square, houses$dist_fire, houses$dist_thea, houses$dist_police,
+                 houses$dist_urinal, houses$dist_pub, houses$dist_church, houses$dist_bank,
+                 houses$no_sewer, houses$old_sewer, houses$dist_vent, houses$dist_pump, houses$dist_pit_fake)
+mB2 = rdrobust(y = houses$log_rentals_1864, x = houses$dist2, covs = controls, 
+              vce = "nn", cluster = houses$block)
+summary(mB2)
+
+mB2_coef = mB2$coef[1]
+mB2_se = mB2$se[1]
+mB2_bw = mB2$bws[1]
+mB2_obs = sum(mB2$N_h)
+mB2_mean = mean(houses[houses$broad == 0 & houses$dist_netw < mB2_bw, ]$rentals_64, na.rm = T)
+
+#column 3
+mB3 = lm.cluster(data = houses[houses$dist_netw < bw_1864, ], cluster = "block",
+                log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+
+summary(mB3)
+
+mB3_coef = mB3$lm_res$coefficients[2]
+mB3_se = summary(mB3)[2,2]
+mB3_obs = length(mB3$lm_res$residuals)
+
+#column 4
+mB4 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+                log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+
+summary(mB4)
+
+mB4_coef = mB4$lm_res$coefficients[2]
+mB4_se = summary(mB4)[2,2]
+mB4_obs = length(mB4$lm_res$residuals)
+
+#column 5
+mB5 = lm.cluster(data = houses[houses$dist_netw < 1, ], cluster = "block",
+                log_rentals_1864 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake + as.factor(seg_5))
+
+
+mB5_coef = mB5$lm_res$coefficients[2]
+mB5_se = summary(mB5)[2,2]
+mB5_obs = length(mB5$lm_res$residuals)
+
+```
+
+```{r, Panel C}
+houses2 = read_dta("aer_replication/data/19th/Merged_1846_1894_data.dta")
+houses2$temp = houses2$dist_netw/100
+houses2$temp = ifelse(houses2$broad == 0, -houses2$dist_netw/100, houses2$dist_netw/100)
+
+#optimal bw
+houses2$dist_netw = houses2$dist_netw/100
+houses2$dist_netw2 = houses2$dist_netw^2
+houses2$dist_netw3 = houses2$dist_netw^3
+houses2$dist_2 = houses2$dist_netw
+houses2$dist_2 = ifelse(houses2$broad == 0, -houses2$dist_netw, houses2$dist_2)
+houses2$dist_2_2 = houses2$dist_2^2
+
+bw_1894 = rdbwselect(y = houses2$log_rentals_1894, x = houses2$temp, vce = "nn", cluster = houses2$block)$bws[1]
+
+mean_rentals94 = mean(houses2[houses2$broad == 0 & houses2$dist_netw < bw_1894, ]$rentals_94, na.rm = T)
+mean_rentals94_all = mean(houses2[houses2$broad == 0 & houses2$dist_netw < 1, ]$rentals_94, na.rm = T)
+
+#RINSE AND REPEAT
+
+#column 1
+mC1 = rdrobust(y = houses2$log_rentals_1894, x = houses2$dist_2, vce = "nn", cluster = houses2$block)
+
+mC1_coef = mC1$coef[1]
+mC1_se = mC1$se[1]
+mC1_bw = mC1$bws[1]
+mC1_obs = sum(mC1$N_h)
+
+#column 2
+controls = cbind(houses2$dist_cent, houses2$dist_square, houses2$dist_bank, houses2$dist_pit_fake)
+mC2 = rdrobust(y = houses2$log_rentals_1894, x = houses2$dist_2, covs = controls, 
+              vce = "nn", cluster = houses2$block, all = T)
+summary(mC2)
+
+mC2_coef = mC2$coef[1]
+mC2_se = mC2$se[1]
+mC2_bw = mC2$bws[1]
+mC2_obs = sum(mC2$N_h)
+mC2_mean = mean(houses2[houses2$broad == 0 & houses2$dist_netw < mC2_bw, ]$rentals_94, na.rm = T)
+
+#column 3
+mC3 = lm.cluster(data = houses2[houses2$dist_netw < bw_1894, ], cluster = "block",
+                log_rentals_1894 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square)
+
+summary(mC3)
+
+mC3_coef = mC3$lm_res$coefficients[2]
+mC3_se = summary(mC3)[2,2]
+mC3_obs = length(mC3$lm_res$residuals)
+
+#column 4
+mC4 = lm.cluster(data = houses2[houses2$dist_netw < 1, ], cluster = "block",
+                log_rentals_1894 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square)
+
+summary(mC4)
+
+mC4_coef = mC4$lm_res$coefficients[2]
+mC4_se = summary(mC4)[2,2]
+mC4_obs = length(mC4$lm_res$residuals)
+
+#column 5
+mC5 = lm.cluster(data = houses2[houses2$dist_netw < 1, ], cluster = "block",
+                log_rentals_1894 ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + as.factor(seg_5))
+
+
+mC5_coef = mC5$lm_res$coefficients[2]
+mC5_se = summary(mC5)[2,2]
+mC5_obs = length(mC5$lm_res$residuals)
+
+ 
+```
+
+
+```{r, Panel D}
+#Panel D
+houses3 = read_dta("aer_replication/data/20th/houses_1936_final.dta")
+houses3$temp = houses3$dist_netw
+houses3$temp = ifelse(houses3$broad == 0, -houses3$dist_netw, houses3$temp)
+
+houses3$dist_2 = houses3$dist_netw
+houses3$dist_2 = ifelse(houses3$broad == 0, -houses3$dist_netw, houses3$dist_2)
+
+bw_1936 = rdbwselect(y = houses3$lnrentals, houses3$temp, vce = "nn", cluster = houses3$block)$bws[1]
+
+mean_rentals36 = mean(houses3[houses3$broad == 0 & houses3$dist_netw < bw_1936, ]$rentals, na.rm = T)
+mean_rentals36_all = mean(houses3[houses3$broad == 0 & houses3$dist_netw < 1, ]$rentals, na.rm = T)
+
+#column 1
+mD1 = rdrobust(y = houses3$lnrentals, x = houses3$dist_2, vce = "nn", cluster = houses3$block)
+
+mD1_coef = mD1$coef[1]
+mD1_se = mD1$se[1]
+mD1_bw = mD1$bws[1]
+mD1_obs = sum(mD1$N_h)
+
+#column 2
+controls = cbind(houses3$dist_cent, houses3$dist_square, houses3$dist_thea, 
+                 houses3$dist_pub, houses3$dist_church, houses3$dist_bank)
+mD2 = rdrobust(y = houses3$lnrentals, x = houses3$dist_2, covs = controls, 
+              vce = "nn", cluster = houses3$block, h = .373, all = T)
+summary(mD2)
+
+mD2_coef = mD2$coef[1]
+mD2_se = mD2$se[1]
+mD2_bw = mD2$bws[1]
+mD2_obs = sum(mD2$N_h)
+mD2_mean = mean(houses3[houses3$broad == 0 & houses3$dist_netw < mD2_bw, ]$rentals, na.rm = T)
+
+#column 3
+mD3 = lm.cluster(data = houses3[houses3$dist_netw < bw_1936, ], cluster = "block",
+                lnrentals ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                dist_thea + dist_school + dist_pub + dist_church + dist_bank + length + width)
+
+summary(mD3)
+
+mD3_coef = mD3$lm_res$coefficients[2]
+mD3_se = summary(mD3)[2,2]
+mD3_obs = length(mD3$lm_res$residuals)
+
+#column 4
+mD4 = lm.cluster(data = houses3[houses3$dist_netw < 1, ], cluster = "block",
+                lnrentals ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                dist_thea + dist_school + dist_pub + dist_church + dist_bank + length + width)
+
+summary(mD4)
+
+mD4_coef = mD4$lm_res$coefficients[2]
+mD4_se = summary(mD4)[2,2]
+mD4_obs = length(mD4$lm_res$residuals)
+
+#column 5
+mD5 = lm.cluster(data = houses3[houses3$dist_netw < 1, ], cluster = "block",
+                lnrentals ~ broad + dist_netw + dist_netw2 + dist_cent + dist_square + 
+                dist_thea + dist_school + dist_pub + dist_church + dist_bank + 
+                  length + width + as.factor(seg_5))
+
+mD5_coef = mD5$lm_res$coefficients[2]
+mD5_se = summary(mD5)[2,2]
+mD5_obs = length(mD5$lm_res$residuals)
 
 
 ```
 
+```{r, results = 'asis'}
+#Make the table
 
+
+mA1_bw = 100*mA1_bw
+mA2_bw = 100*mA2_bw
+mB1_bw = 100*mB1_bw
+mB2_bw = 100*mB2_bw
+mC1_bw = 100*mC1_bw
+mC2_bw = 100*mC2_bw
+mD1_bw = 100*mD1_bw
+mD2_bw = 100*mD2_bw
+
+llr_base = c(mA1_coef, mA1_se, mA1_obs, mean_rentals53, mA1_bw,
+         mB1_coef, mB1_se, mB1_obs, mean_rentals64, mB1_bw,
+         mC1_coef, mC1_se, mC1_obs, mean_rentals94, mC1_bw,
+         mD1_coef, mD1_se, mD1_obs, mean_rentals36, mD1_bw)
+llr_cntrls = c(mA2_coef, mA2_se, mA2_obs, mA2_mean, mA2_bw,
+               mB2_coef, mB2_se, mB2_obs, mB2_mean, mB2_bw,
+               mC2_coef, mC2_se, mC2_obs, mC2_mean, mC2_bw,
+               mD2_coef, mD2_se, mD2_obs, mD2_mean, mD2_bw)
+
+poly_rd_opt = c(mA3_coef, mA3_se, mA3_obs, mean_rentals53, 100,
+                mB3_coef, mB3_se, mB3_obs, mean_rentals64, 100,
+                mC3_coef, mC3_se, mC3_obs, mean_rentals94, 100,
+                mD3_coef, mD3_se, mD3_obs, mean_rentals36, 100)
+
+poly_rd_wide = c(mA4_coef, mA4_se, mA4_obs, mean_rentals53_all, 100,
+                 mB4_coef, mB4_se, mB4_obs, mean_rentals64_all, 100,
+                 mC4_coef, mC4_se, mC4_obs, mean_rentals94_all, 100,
+                 mD4_coef, mD4_se, mD4_obs, mean_rentals36_all, 100)
+
+poly_rd_segfe = c(mA5_coef, mA5_se, mA5_obs, mean_rentals53_all, 100,
+                  mB5_coef, mB5_se, mB5_obs, mean_rentals64_all, 100,
+                  mC5_coef, mC5_se, mC5_obs, mean_rentals94_all, 100,
+                  mD5_coef, mD5_se, mD5_obs, mean_rentals36_all, 100)
+
+
+test = data.frame(
+  LLR_Baseline = llr_base,
+  LLR_Controls = llr_cntrls,
+  `Polynomial RD Optimal Band` = poly_rd_opt,
+  `Polynomial RD Wide Band` = poly_rd_wide,
+  `Polynomial RD Segment FE` = poly_rd_segfe
+)
+stargazer(test, summary = FALSE)
+```
 
