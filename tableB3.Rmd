@@ -1,0 +1,581 @@
+---
+title: "tableB3"
+author: "Harrison and Lucas"
+date: "December 12, 2020"
+output: pdf_document
+---
+```{r Set WD/Clean Table}
+library(haven)
+library(tidyverse)
+library(rddtools)
+library(rdrobust)
+library(sandwich)
+library(miceadds)
+setwd("C:/Users/lucas/Documents/CMU/3_Junior Year/Fall/Metrics II 73374/__Final Project/374-Final-Project/Admin Stuff/aer_replication/data/other")
+
+houses <- read_dta("falsification_final.dta")
+houses$dist2 <- houses$dist_fake1 
+```
+
+# Panel A
+```{r Cleaning Data}
+houses$dist2 = ifelse(houses$fake1 == 0, -houses$dist_fake1, houses$dist_fake1)
+```
+
+
+```{r Panel A Col 1}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA1 = rdrobust(y = broad0$log_rentals_1853, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA1)
+
+mA1 = lm.cluster(data = houses[houses$dist_fake1 < bwA1$bws[1], ], cluster = "block",
+                log_rentals_1853 ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+#summary(mA1)
+
+#Coef, SE, Obs, BW
+
+mA1_coef = mA1$lm_res$coefficients[2]
+mA1_se = summary(mA1)[2,2]
+
+mA1_obs = houses[houses$dist_fake1 <bwA1$bws[1],] %>%
+  select(log_rentals_1853, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA1_bw <- 100*bwA1$bws[1]
+```
+
+```{r Panel A Col 2}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA2 = rdrobust(y = broad0$deaths, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA2)
+
+mA2 = lm.cluster(data = houses[houses$dist_fake1 < bwA2$bws[1], ], cluster = "block",
+                deaths ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA2)
+
+mA2_coef = mA2$lm_res$coefficients[2]
+mA2_se = summary(mA2)[2,2]
+
+mA2_obs = houses[houses$dist_fake1 <bwA2$bws[1],] %>%
+  select(deaths, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA2_bw <- 100*bwA2$bws[1]
+```
+
+```{r Panel A Col 3}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA3 = rdrobust(y = broad0$death_ind, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA3)
+
+mA3 = lm.cluster(data = houses[houses$dist_fake1 < bwA3$bws[1], ], cluster = "block",
+                death_ind ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA3)
+
+mA3_coef = mA3$lm_res$coefficients[2]
+mA3_se = summary(mA3)[2,2]
+
+mA3_obs = houses[houses$dist_fake1 <bwA3$bws[1],] %>%
+  select(death_ind, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA3_bw <- 100*bwA3$bws[1]
+```
+
+```{r Panel A Col 4}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA4 = rdrobust(y = broad0$log_rentals_1864, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA4)
+
+mA4 = lm.cluster(data = houses[houses$dist_fake1 < bwA4$bws[1], ], cluster = "block",
+                log_rentals_1864 ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA4)
+
+mA4_coef = mA4$lm_res$coefficients[2]
+mA4_se = summary(mA4)[2,2]
+
+mA4_obs = houses[houses$dist_fake1 <bwA4$bws[1],] %>%
+  select(log_rentals_1864, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA4_bw <- 100*bwA4$bws[1]
+```
+
+```{r Panel A Col 5}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA5 = rdrobust(y = broad0$moved, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA5)
+
+mA5 = lm.cluster(data = houses[houses$dist_fake1 < bwA5$bws[1], ], cluster = "block",
+                moved ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA5)
+
+mA5_coef = mA5$lm_res$coefficients[2]
+mA5_se = summary(mA5)[2,2]
+
+mA5_obs = houses[houses$dist_fake1 <bwA5$bws[1],] %>%
+  select(moved, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA5_bw <- 100*bwA5$bws[1]
+```
+
+```{r Panel A Col 6}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake1 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake1 + dist_fake1 + dist_fake1_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake1 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake1,dist_fake1, dist_fake1_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+# Panel B
+
+```{r Cleaning Data}
+houses$dist2 = ifelse(houses$fake2 ==0, -houses$dist_fake2, houses$dist_fake2)
+```
+
+```{r Panel B Col 1}
+
+broad0 <- houses[houses$broad == 0, ]
+
+broad0 <- broad0[broad0$fid_fake2!=2,]
+
+bwB1 = rdrobust(y = broad0$log_rentals_1853, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+#summary(bwB1)
+
+mB1 = lm.cluster(data = houses[houses$dist_fake2 < bwB1$bws[1], ], cluster = "block",
+                log_rentals_1853 ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+#summary(mB1)
+
+#Coef, SE, Obs, BW
+
+mB1_coef = mB1$lm_res$coefficients[2]
+mB1_se = summary(mB1)[2,2]
+
+mB1_obs = houses[houses$dist_fake2 <bwB1$bws[1],] %>%
+  select(log_rentals_1853, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mB1_bw <- 100*bwB1$bws[1]
+
+mB1List <- c(mB1_coef, mB1_se, mB1_obs, mB1_bw)
+
+print(mB1List)
+```
+
+```{r Panel B Col 2}
+
+broad0 <- houses[houses$broad == 0, ]
+
+broad0 <- broad0[broad0$fid_fake2!=2,]
+
+bwB2 = rdrobust(y = broad0$deaths, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwB2)
+
+mB2 = lm.cluster(data = houses[houses$dist_fake2 < bwB2$bws[1], ], cluster = "block",
+                deaths ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mB2)
+
+mB2_coef = mB2$lm_res$coefficients[2]
+mB2_se = summary(mB2)[2,2]
+
+mB2_obs = houses[houses$dist_fake2 <bwB2$bws[1],] %>%
+  select(deaths, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mB2_bw <- 100*bwB2$bws[1]
+
+mB2List <- c(mB2_coef, mB2_se, mB2_obs, mB2_bw)
+
+print(mB2List)
+```
+
+```{r Panel B Col 3}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA3 = rdrobust(y = broad0$death_ind, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA3)
+
+mA3 = lm.cluster(data = houses[houses$dist_fake2 < bwA3$bws[1], ], cluster = "block",
+                death_ind ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA3)
+
+mA3_coef = mA3$lm_res$coefficients[2]
+mA3_se = summary(mA3)[2,2]
+
+mA3_obs = houses[houses$dist_fake2 <bwA3$bws[1],] %>%
+  select(death_ind, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA3_bw <- 100*bwA3$bws[1]
+```
+
+```{r Panel B Col 4}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA4 = rdrobust(y = broad0$log_rentals_1864, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA4)
+
+mA4 = lm.cluster(data = houses[houses$dist_fake2 < bwA4$bws[1], ], cluster = "block",
+                log_rentals_1864 ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA4)
+
+mA4_coef = mA4$lm_res$coefficients[2]
+mA4_se = summary(mA4)[2,2]
+
+mA4_obs = houses[houses$dist_fake2 <bwA4$bws[1],] %>%
+  select(log_rentals_1864, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA4_bw <- 100*bwA4$bws[1]
+```
+
+```{r Panel B Col 5}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA5 = rdrobust(y = broad0$moved, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA5)
+
+mA5 = lm.cluster(data = houses[houses$dist_fake2 < bwA5$bws[1], ], cluster = "block",
+                moved ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA5)
+
+mA5_coef = mA5$lm_res$coefficients[2]
+mA5_se = summary(mA5)[2,2]
+
+mA5_obs = houses[houses$dist_fake2 <bwA5$bws[1],] %>%
+  select(moved, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA5_bw <- 100*bwA5$bws[1]
+```
+
+```{r Panel B Col 6}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake2 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake2 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+```{r Panel B Col 7}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake2 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake2 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+```{r Panel B Col 8}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake2 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake2 + dist_fake2 + dist_fake2_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake2 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake2,dist_fake2, dist_fake2_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+# Panel C
+
+```{r Cleaning Data}
+houses$dist3 = ifelse(houses$fake3 == 0, -houses$dist_fake3, houses$dist_fake3)
+```
+
+```{r Panel C Col 1}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwC1 = rdrobust(y = broad0$log_rentals_1853, x = broad0$dist3, vce = "nn", cluster = broad0$block)
+summary(bwC1)
+
+mC1 = lm.cluster(data = houses[houses$dist_fake3 < bwC1$bws[1], ], cluster = "block",
+                log_rentals_1853 ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+#summary(mC1)
+
+#Coef, SE, Obs, BW
+
+mC1_coef = mC1$lm_res$coefficients[2]
+mC1_se = summary(mC1)[2,2]
+
+mC1_obs = houses[houses$dist_fake3 <bwC1$bws[1],] %>%
+  select(log_rentals_1853, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mC1_bw <- 100*bwC1$bws[1]
+```
+
+```{r Panel C Col 2}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA2 = rdrobust(y = broad0$deaths, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA2)
+
+mA2 = lm.cluster(data = houses[houses$dist_fake3 < bwA2$bws[1], ], cluster = "block",
+                deaths ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA2)
+
+mA2_coef = mA2$lm_res$coefficients[2]
+mA2_se = summary(mA2)[2,2]
+
+mA2_obs = houses[houses$dist_fake3 <bwA2$bws[1],] %>%
+  select(deaths, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA2_bw <- 100*bwA2$bws[1]
+```
+
+```{r Panel C Col 3}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA3 = rdrobust(y = broad0$death_ind, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA3)
+
+mA3 = lm.cluster(data = houses[houses$dist_fake3 < bwA3$bws[1], ], cluster = "block",
+                death_ind ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA3)
+
+mA3_coef = mA3$lm_res$coefficients[2]
+mA3_se = summary(mA3)[2,2]
+
+mA3_obs = houses[houses$dist_fake3 <bwA3$bws[1],] %>%
+  select(death_ind, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA3_bw <- 100*bwA3$bws[1]
+```
+
+```{r Panel C Col 4}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA4 = rdrobust(y = broad0$log_rentals_1864, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA4)
+
+mA4 = lm.cluster(data = houses[houses$dist_fake3 < bwA4$bws[1], ], cluster = "block",
+                log_rentals_1864 ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA4)
+
+mA4_coef = mA4$lm_res$coefficients[2]
+mA4_se = summary(mA4)[2,2]
+
+mA4_obs = houses[houses$dist_fake3 <bwA4$bws[1],] %>%
+  select(log_rentals_1864, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA4_bw <- 100*bwA4$bws[1]
+```
+
+```{r Panel C Col 5}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA5 = rdrobust(y = broad0$moved, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+summary(bwA5)
+
+mA5 = lm.cluster(data = houses[houses$dist_fake3 < bwA5$bws[1], ], cluster = "block",
+                moved ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA5)
+
+mA5_coef = mA5$lm_res$coefficients[2]
+mA5_se = summary(mA5)[2,2]
+
+mA5_obs = houses[houses$dist_fake3 <bwA5$bws[1],] %>%
+  select(moved, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA5_bw <- 100*bwA5$bws[1]
+```
+
+```{r Panel C Col 6}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake3 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake3 + dist_fake3 + dist_fake3_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake3 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake3,dist_fake3, dist_fake3_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+# Panel D
+
+```{r Cleaning Data}
+houses$dist4 = ifelse(houses$fake4 == 0, -houses$dist_fake4, houses$dist_fake4)
+```
+
+```{r Panel D Col 7}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake4 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake4 + dist_fake4 + dist_fake4_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake4 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake4,dist_fake4, dist_fake4_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
+
+```{r Panel D Col 8}
+
+broad0 <- houses[houses$broad == 0, ]
+
+bwA6 = rdrobust(y = broad0$log_rentals_1894, x = broad0$dist2, vce = "nn", cluster = broad0$block)
+
+mA6 = lm.cluster(data = houses[houses$dist_fake4 < bwA6$bws[1], ], cluster = "block",
+                log_rentals_1894 ~ fake4 + dist_fake4 + dist_fake4_2 + dist_cent + dist_square + 
+                  dist_fire + dist_thea + dist_police + dist_urinal + dist_pub + dist_church + dist_bank + 
+                  no_sewer + old_sewer + dist_vent + dist_pump + dist_pit_fake)
+summary(mA6)
+
+mA6_coef = mA6$lm_res$coefficients[2]
+mA6_se = summary(mA6)[2,2]
+
+mA6_obs = houses[houses$dist_fake4 <bwA6$bws[1],] %>%
+  select(log_rentals_1894, fake4,dist_fake4, dist_fake4_2, dist_cent, dist_square, dist_fire, dist_thea, dist_police, dist_urinal, dist_pub, dist_church, dist_bank,no_sewer, old_sewer, dist_vent, dist_pump, dist_pit_fake) %>%
+  drop_na() %>%
+  nrow()
+
+mA6_bw <- 100*bwA6$bws[1]
+```
